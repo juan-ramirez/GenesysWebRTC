@@ -15,7 +15,7 @@
   </style>
 
   <!-- Removed by developer -->
-  <!-- <link type="text/css" rel="stylesheet" media="all" href="./Genesys WebRTC Gateway Demo_files/style.css"> -->
+  <link type="text/css" rel="stylesheet" media="all" href="./Genesys WebRTC Gateway Demo_files/style.css">
 
   <!-- You can use the packaged jquery or a version you prefer -->
   <script type="text/javascript" src="./Genesys WebRTC Gateway Demo_files/jquery-1.10.2.js"></script><style type="text/css"></style>
@@ -395,24 +395,24 @@
 
   <!-- begin header -->
    <div id="header"><!-- 3 -->
+     <span class="verticalLine" id="button-end-session" style="display:none">
+       <label onclick="doEndSession()" style="margin-left:15px;margin-right:15px">End Session
+       </label>
+     </span>
+
+
+    <!--TODO add setting method-->
+    <!--
     <table id="ghcc-demo-hdr">
     <tbody><tr>
     <td id="ghcc-demo-logo">
       <img alt="Genesys" id="ghcc-header-logo" src="./Genesys WebRTC Gateway Demo_files/logo-genesys-refresh.jpg" height="20px">
       &nbsp;<span style="font-size:20;">WebRTC Customer Portal</span>
 
-      <span class="verticalLine" id="button-end-session" style="display:none">
-        <label onclick="doEndSession()" style="margin-left:15px;margin-right:15px">End Session
-        </label>
-      </span>
-      <!--TODO add setting method-->
-
       <span class="verticalLine" id="setting">
         <img alt="Genesys" id="img-setting" src="./Genesys WebRTC Gateway Demo_files/settings_icon.png">
       </span>
-
     </td>
-    
     </tr>
     <tr>
       <td id="ghcc-demo-loginstatus">
@@ -426,7 +426,9 @@
       </td>
     </tr>
 
-    </tbody></table>
+    </tbody>
+    </table>
+    -->
   </div>
   <!-- end header -->
 
@@ -437,10 +439,9 @@
           <tbody>
             <tr>
                 <td id="login-text2">
-                  <h4 class="form-signin-heading">
+                  <h5 class="form-signin-heading">
                     Ingresa tus datos para ser atendido por uno de nuestros asesores especializados
-                  </h4>
-
+                  </h5>
                 </td>
             </tr>
             <tr>
