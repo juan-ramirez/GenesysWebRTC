@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<!-- saved from url=(0054)http://190.131.229.203/WebRTC/demo/demo2/customer.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Genesys WebRTC Gateway Demo</title>
+
+<!-- Bootstrap -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+
+<link type="text/css" rel="stylesheet" media="all" href="./Genesys WebRTC Gateway Demo_files/style.css">
+
+<!-- You can use the packaged jquery or a version you prefer -->
+<script type="text/javascript" src="./Genesys WebRTC Gateway Demo_files/jquery-1.10.2.js"></script><style type="text/css"></style>
+<!-- <script type="text/javascript" src="//code.jquery.com/jquery-latest.js"></script> -->
+
+<!-- By default the JSAPI library file grtc.js is under the src dir -->
+<script type="text/javascript" src="./Genesys WebRTC Gateway Demo_files/grtc.js"></script>
+
+<script type="text/javascript">
+
+    var grtcClient = null;
+    var grtcSession = null;
+
+    // hard coded DN of the agent to call
+    var agentID = "5001";
+
+    // hard coded DN of the customer when calling as a registered user
+    var customerID = "9000";
+
+    var STATUS_CONNECTED = "connected";
+    var STATUS_NOT_CONNECTED = "not connected";
+    var MSG_NOT_CONNECTED = "Connection could not be established. Please try again later.";
+
+    // This is the configuration object used to create Grtc.Client instance.
+    // Ask your RSMP and SIP server administrator to see what values should
+    // be set for these parameters.
+    var conf = { };
+    //
+    // Where the WebRTC Gateway is running (required)
+    conf.webrtc_gateway = "http://190.131.229.203:8086";
+    //
+    // Where the STUN server is running (required unless TURN server specified)
+    conf.stun_server = "";
+    //conf.stun_server = "184.169.141.114:36000";
+    //conf.stun_server = "23.21.172.171:3478";
+    //
+    // Next 3 are for TURN server setting
+    // (optional if a valid STUN server is specified, otherwise required)
+    //conf.turn_server = "23.21.172.171:3478";
+    //conf.turn_username = "ninefingers";
+    //conf.turn_password = "youhavetoberealistic";
+    //
+    // Next 2 needed if need to authenticate sign-in to SIP server
+    //conf.sip_username = "";
+    //conf.sip_password = "";
+
+    // check if browser supports webrtc functionality
+    function checkBrowser() {
+        if (!Grtc.isWebrtcSupported()) {
+            // webrtc not supported by browser; warn the user
+            $('#login-window').hide();
+            alert("WebRTC is not supported by your browser. " +
+                  "Features in this demo may not function correctly. " +
+                  "We recommend to use Google Chrome version 25 or above.");
+        }
+    }
+
+    function handlePeerClosing() {
+        // reset the <video> element
+        $('#remoteView').src = "";
+        $('#remoteView').css("opacity", 0);
+
+        // reset the connection status
+        $("#video-status").empty();
+        $("#video-status").append(STATUS_NOT_CONNECTED);
+
+        // reset the message bar
+        $('#message-bar').empty();
+        $('#message-bar').append(MSG_NOT_CONNECTED);
+
+        // reset the agent name
+        $("#agent-name-label").empty();
+        $("#agent-name-value").empty();
+
+        // hide the End Call button
+        $('#endcall-button').hide();
+
+        // display the Call Again button
+        $('#callagain-button').show();
+
+        // hide buttons for enable/disable video/audio
+        $('#enable-video-button').hide();
+        $('#disable-video-button').hide();
+        $('#enable-audio-button').hide();
+        $('#disable-audio-button').hide();
+
+        // destruct the MediaSession object
+        if (grtcSession) {
+            grtcSession = null;
+        }
+    }
+
+    function getStarted() {
+        // hide the login section
+        $("#login-window").hide();
+
+        // display the client section
+        $('#client').show();
+
+        // display the End Session button
+        $("#button-end-session").show();
+
+        // initialize the connection status
+        $("#video-status").empty();
+        $("#video-status").append(STATUS_NOT_CONNECTED);
+
+        // construct a Grtc.Client instance using the configuration object
+        grtcClient = new Grtc.Client(conf);
+
+        // add an event handler to do some work if the peer closes
+        grtcClient.onPeerClosing.add(handlePeerClosing);
+
+        window.onbeforeunload = function() {
+            grtcClient.disconnect();
+            $('#remoteView').src = "";
+            $('#remoteView').css("opacity", 0);
+            $("#agent-name-label").empty();
+            $("#agent-name-value").empty();
+        };
+
+        testEnableMediaSource();
+    }
+
+    function handleOnConnect(e) {
+        testCall();
+    }
+
+    function handleOnRegister(e) {
+        handleOnConnect(e);
+    }
+
+    function handleOnConnectFailed(e) {
+        window.alert(e.message);
+    }
+
+    function testEnableMediaSource() {
+        if (!grtcClient) alert("Grtc.Client instance not created");
+        else {
+            grtcClient.onMediaSuccess.add(function (obj) {
+                document.getElementById("localView").style.opacity = 1;
+                grtcClient.setViewFromStream($('#localView')[0], obj.stream);
+
+                // call testConnect if you want to sign in anonymously
+                // call testRegister if you want to sign in as a DN defined in var customerID
+                // you should not call both
+
+                testConnect();
+                //testRegister();
+            });
+            grtcClient.onMediaFailure.add(function (obj) {
+                window.alert(obj.message);
+            });
+
+            // audio+video access
+            grtcClient.enableMediaSource();
+
+            // audio-only access
+            //grtcClient.enableMediaSource(true, false);
+        }
+    }
+
+    function testCall() {
+        // calls Grtc.Client.makeCall
+        if (!grtcClient) alert("Grtc.Client instance not created");
+        else {
+            // create a MediaSession instance and make a call on it
+            grtcSession = new Grtc.MediaSession(grtcClient);
+
+            // attach data if available
+            var dataToAttach = [
+                {
+                    "key": "FirstName",
+                    "value": $('#customer_name').val()
+                },
+                {
+                    "key": "Phone",
+                    "value": $('#phone_number').val()
+                },
+                {
+                    "key": "EmailAddress",
+                    "value": $('#email').val()
+                }
+            ];
+            try {
+                grtcSession.setData(dataToAttach);
+            } catch (e) {
+                console.log("setData: error");
+            }
+
+            grtcSession.onRemoteStream.add(function (obj) {
+                $('#remoteView').css("opacity", 1);
+                grtcClient.setViewFromStream($('#remoteView')[0], obj.stream);
+
+                $("#agent-name-label").empty();
+                $("#agent-name-label").append("Agent Name");
+                $("#agent-name-value").empty();
+                $("#agent-name-value").append(agentID);
+
+                // call session established, enable the "End Call" button
+                $('#endcall-button').show();
+                $('#callagain-button').hide();
+
+                $('#enable-video-button').hide();
+                $('#disable-video-button').show();
+                $('#enable-audio-button').hide();
+                $('#disable-audio-button').show();
+
+                // update call status
+                $("#video-status").empty();
+                $("#video-status").append(STATUS_CONNECTED);
+
+                $('#message-bar').empty();
+            });
+
+            $("#video-status").empty();
+            $("#video-status").append("connecting...");
+
+            $('#message-bar').empty();
+
+            // make audio+video call
+            grtcSession.makeCall(agentID);
+
+            // make audio-only call
+            //grtcSession.makeCall(agentID, true, false);
+        }
+    }
+
+    function testConnect() {
+        // calls Grtc.Client.connect
+        if (!grtcClient) alert("Grtc.Client instance not created");
+        else {
+            grtcClient.onConnect.add(handleOnConnect);
+            grtcClient.onFailed.add(handleOnConnectFailed);
+            grtcClient.connect();
+        }
+    }
+
+    function testRegister() {
+        // calls Grtc.Client.register
+        if (!grtcClient) alert("Grtc.Client instance not created");
+        else {
+            grtcClient.onRegister.add(handleOnRegister);
+            grtcClient.onFailed.add(handleOnConnectFailed);
+            grtcClient.register(customerID);
+        }
+    }
+
+    function handleOnDisconnect() {
+        console.log("client disconnected");
+    }
+
+    function testUnregister() {
+        // calls Grtc.Client.disconnect
+        if (!grtcClient) alert("Grtc.Client instance not created");
+        else {
+            grtcClient.onDisconnect.add(handleOnDisconnect);
+            grtcClient.disconnect();
+
+            $("#agent").hide();
+            $("#icons-video-chat").hide();
+            $("#button-log-out").hide();
+            $("#login-window").show();
+        }
+    }
+
+    function doEndCall() {
+        if (grtcSession) {
+            grtcSession.terminateCall();
+
+            $('#remoteView').src = "";
+            $('#remoteView').css("opacity", 0);
+            $("#video-status").empty();
+            $("#video-status").append(STATUS_NOT_CONNECTED);
+
+            $('#message-bar').empty();
+
+            $("#agent-name-label").empty();
+            $("#agent-name-value").empty();
+
+            $('#callagain-button').show();
+            $('#endcall-button').hide();
+
+            $('#enable-video-button').hide();
+            $('#disable-video-button').hide();
+            $('#enable-audio-button').hide();
+            $('#disable-audio-button').hide();
+
+            grtcSession = null;
+        }
+    }
+
+    function doEndSession() {
+        doEndCall();
+
+        if (!grtcClient) alert("Grtc.Client instance not created");
+        else {
+            grtcClient.disconnect();
+            document.getElementById("localView").style.opacity = 0;
+
+            // stop camera
+            grtcClient.disableMediaSource();
+        }
+
+        $('#client').hide();
+        $('#icons-video-chat').hide();
+
+        $('#login-window').show();
+        $("#button-end-session").hide();
+
+        $('#enable-video-button').hide();
+        $('#disable-video-button').hide();
+        $('#enable-audio-button').hide();
+        $('#disable-audio-button').hide();
+
+    }
+
+    function changeVideoSize(value) {
+        $('#remoteView').width(value);
+    }
+
+    function testEnableVideo() {
+        if (grtcSession) {
+            grtcSession.updateCall(null, true);
+            $('#enable-video-button').hide();
+            $('#disable-video-button').show();
+        }
+    }
+
+    function testDisableVideo() {
+        if (grtcSession) {
+            grtcSession.updateCall(null, false);
+            $('#enable-video-button').show();
+            $('#disable-video-button').hide();
+        }
+    }
+
+    function testEnableAudio() {
+        if (grtcSession) {
+            grtcSession.updateCall(true, null);
+            $('#enable-audio-button').hide();
+            $('#disable-audio-button').show();
+        }
+    }
+
+    function testDisableAudio() {
+        if (grtcSession) {
+            grtcSession.updateCall(false, null);
+            $('#enable-audio-button').show();
+            $('#disable-audio-button').hide();
+        }
+    }
+
+    $(document).ready(function () {
+        $('#enable-video-button').click(function () { testEnableVideo(); });
+        $('#disable-video-button').click(function () { testDisableVideo(); });
+        $('#enable-audio-button').click(function () { testEnableAudio(); });
+        $('#disable-audio-button').click(function () { testDisableAudio(); });
+        $('#endcall-button').click(function () { doEndCall(); });
+        $('#callagain-button').click(function () { testCall(); });
+
+        checkBrowser();
+    });
+
+</script>
+
+</head>
+
+<!-- ---------- ---------- -->
+
+<body class="sidebar-left">
+
+<!-- begin wrapper -->
+<div id="wrapper"> <!-- 1 -->
+
+<!-- begin container -->
+<div id="container" class="clear-block"> <!-- 2 -->
+
+  <!-- begin header -->
+  <div id="header"> <!-- 3 -->
+    <table id="ghcc-demo-hdr">
+    <tbody><tr>
+    <td id="ghcc-demo-logo">
+      <img alt="Genesys" id="ghcc-header-logo" src="./Genesys WebRTC Gateway Demo_files/logo-genesys-refresh.jpg" height="20px">
+      &nbsp;<span style="font-size:20;">WebRTC Customer Portal</span>
+
+      <span class="verticalLine" id="button-end-session" style="display:none">
+        <label onclick="doEndSession()" style="margin-left:15px;margin-right:15px">End Session
+        </label>
+      </span>
+
+      <!--TODO add setting method-->
+      <span class="verticalLine" id="setting">
+        <img alt="Genesys" id="img-setting" src="./Genesys WebRTC Gateway Demo_files/settings_icon.png">
+      </span>
+
+    </td>
+    </tr>
+    <tr>
+      <td id="ghcc-demo-loginstatus">
+        <img id="ghcc-login-status" style="border: none" src="./Genesys WebRTC Gateway Demo_files/gettingstarted_icon.png">
+        GETTING STARTED
+        <span id="icons-video-chat" style="display:none">
+            <img id="ghcc-icons-arrow" style="border: none" src="./Genesys WebRTC Gateway Demo_files/arrow_icon.png">
+            <img id="ghcc-icons-video" style="border: none" src="./Genesys WebRTC Gateway Demo_files/video_icon.png">
+            Video Chat
+        </span>
+      </td>
+    </tr>
+
+    </tbody></table>
+  </div>
+  <!-- end header -->
+
+  <div id="login-window">
+        <table>
+            <tbody><tr>
+                <td id="login-header">
+                    Getting Started
+                </td>
+            </tr>
+            <tr>
+                <td id="login-text1">
+                    Welcome to WebRTC Customer Portal
+                </td>
+            </tr>
+            <tr>
+                <td id="login-text2">
+                    Use this service to video chat with a customer service agent with a simple click.
+                    <br>
+                    (fill in these optional data to be sent to the agent)
+                </td>
+            </tr>
+            <tr>
+                <td id="login-text3">
+                    <table>
+                        <tbody><tr>
+                            <td>Name:</td>
+                            <td> <input id="customer_name" type="text" value="Yong" size="30"> </td>
+                        </tr>
+                        <tr>
+                            <td>Phone:</td>
+                            <td> <input id="phone_number" type="text" value="905-9683315" size="30"> </td>
+                        </tr>
+                        <tr>
+                            <td>Email:</td>
+                            <td> <input id="email" type="text" value="yong.du@genesyslab.com" size="30"> </td>
+                        </tr>
+                    </tbody></table>
+
+                    <div>
+<!--
+                        <img src="../images/icons/phone-icon.png" title="start call" id="startcall-button" onclick="getStarted();" />
+-->
+                        <input id="startcall-button" title="start call" type="submit" value="" style="background-image: url(&#39;../images/icons/phone-icon.png&#39;); background-position:center;" onclick="getStarted();">
+                    </div>
+                </td><td>
+            </td></tr>
+        </tbody></table>
+  </div>
+
+  <!-- begin client -->
+  <div id="client" style="display:none;"> <!-- 3 -->
+
+    <!-- begin sidebar-left -->
+    <div class="sidebar">
+        <div id="sidebar-left" class="sidebar ghcc-list-section2"> <!-- 4 -->
+
+            <div id="ghcc-users-title" class="ghcc-list-section-header"> <!-- 5 -->
+                Customer Window
+            </div>
+
+            <div class="ghcc-list-section-body ghcc-list-section-body-center"> <!-- 5 -->
+                <video width="160" height="120" id="localView" autoplay="autoplay" controls="" muted="true">
+            </video></div>
+        </div>
+        <!-- end sidebar-left -->
+
+        <div id="sidebar-left" class="sidebar ghcc-list-section2" style="margin-top:30px"> <!-- 4 -->
+            <div id="ghcc-users-title" class="ghcc-list-section-header"> <!-- 5 -->
+                Call Information
+            </div>
+
+            <table style="width: 100%" class="ghcc-list-section-body">
+                <!-- Wait Time -->
+                <tbody><tr>
+                    <td style="width:60%; font-weight:bold; padding-left:10px; text-align:left;">
+                        <span id="agent-name-label">&nbsp;</span>
+                    </td>
+                    <td style="width:40%; padding-right:10px; text-align:right;">
+                        <span id="agent-name-value" class="ghcc-list-section-value">&nbsp;</span>
+                    </td>
+                </tr>
+
+            </tbody></table>
+
+        </div>
+    </div>
+
+    <!-- begin center -->
+    <div id="center"> <!-- 4 -->
+        <div id="squeeze"> <!-- 5 -->
+            <div class="clear-block"> <!-- 6 -->
+
+                <div id="ghcc-content"> <!-- 7 -->
+
+                    <div id="ghcc-media" class="ghcc-list-section3" style="min-height:330px"> <!-- 8 -->
+                        <table id="ghcc-demo-hdr" style="background-color:#EEE">
+                            <tbody><tr id="ghcc-users-window-title" class="ghcc-list-section-header">
+                                <td style="font-weight:bold;padding-left:20px">
+                                    Agent Window
+                                </td>
+                                <td id="ghcc-demo-title" style="font-weight:bold;text-align:right;padding-right:20px">
+                                  <span style="padding-right:5px;font-size:12px">
+                                    Status:
+                                  </span>
+                                  <span id="video-status" style="padding-left:5px;font-size:12px">
+                                  </span>
+                                </td>
+                            </tr>
+                        </tbody></table>
+
+                        <div id="ghcc-media-remote-video" class="ghcc-list-section-body ghcc-list-section-body-center"> <!-- 9 -->
+                            <video width="320" height="240" id="remoteView" autoplay="autoplay" controls="" style="opacity: 0;
+                            -webkit-transition-property: opacity;
+                            -webkit-transition-duration: 1s;
+                            margin-top:20px">
+                            <!-- video URL set dynamically in function onAddRemoteStream -->
+                            </video>
+                        </div>
+
+                        <span id="message-bar" style="padding-left:5px;padding-right:5px;font-size:xx-small;color:#444;">
+                        </span>
+                    </div>
+
+                    <div class="ghcc-list-section3 ghcc-list-section-body-center" style="min-height:50px">
+<!-- the video size component is not necessary in the new UI design
+                        <div>
+                            <span style="text-align:left;margin-left:50px"> Video Size: </span>
+                            <input type="range" min="100" max="640" step="50" id="mySlider" value="640" style="margin-top:15px;margin-right:50px" onchange="changeVideoSize(this.value);"/>
+                        </div>
+-->
+<!--
+                        <div>
+                        <input id="endcall-button" type="submit" value="" style="background-image: url('../images/buttons/endcall_button.png');display:none" onclick="doEndCall()"></input>
+
+                        <input id="callagain-button" type="submit" value="" style="background-image: url('../images/buttons/callagain_button.png');display:none" onclick="testCall()"></input>
+                        </div>
+-->
+                        <div style="margin-top:15px; margin-bottom:10px">
+                        <img src="./Genesys WebRTC Gateway Demo_files/microphone-icon.png" title="mute" id="disable-audio-button" style="display:none">
+                        <img src="./Genesys WebRTC Gateway Demo_files/microphone-mute-icon.png" title="unmute" id="enable-audio-button" style="display:none">
+                        <img src="./Genesys WebRTC Gateway Demo_files/video-icon.png" title="disable video" id="disable-video-button" style="display:none">
+                        <img src="./Genesys WebRTC Gateway Demo_files/video-disabled-icon.png" title="enable video" id="enable-video-button" style="display:none">
+                        <img src="./Genesys WebRTC Gateway Demo_files/phone-end-icon.png" title="end call" id="endcall-button" style="display:none">
+                        <img src="./Genesys WebRTC Gateway Demo_files/phone-icon.png" title="call again" id="callagain-button" style="display:none">
+<!--
+                        <input id="enable-video-button" type="submit" value="Enable Video" onclick="testEnableVideo()" style="display:none"></input>
+                        <input id="disable-video-button" type="submit" value="Disable Video" onclick="testDisableVideo()" style="display:none"></input>
+
+                        <input id="enable-audio-button" type="submit" value="Enable Audio" onclick="testEnableAudio()" style="display:none"></input>
+                        <input id="disable-audio-button" type="submit" value="Disable Audio" onclick="testDisableAudio()" style="display:none"></input>
+-->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end center -->
+
+  </div>
+  <!-- end client -->
+
+</div><!-- end wrapper -->
+
+</div><!-- end container -->
+
+<!-- Bootstrap JS don't delete  -->
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+
+</body></html>
