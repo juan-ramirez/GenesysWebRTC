@@ -8,8 +8,14 @@
   <!-- Bootstrap Mobile first-->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href="css/bootstrap.min.css" rel="stylesheet">
+  <style type="text/css">
+  #login-window{
+    padding: 15px;
+  }
+  </style>
 
-  <link type="text/css" rel="stylesheet" media="all" href="./Genesys WebRTC Gateway Demo_files/style.css">
+  <!-- Removed by developer -->
+  <!-- <link type="text/css" rel="stylesheet" media="all" href="./Genesys WebRTC Gateway Demo_files/style.css"> -->
 
   <!-- You can use the packaged jquery or a version you prefer -->
   <script type="text/javascript" src="./Genesys WebRTC Gateway Demo_files/jquery-1.10.2.js"></script><style type="text/css"></style>
@@ -464,21 +470,14 @@
                         <label for="phone_number">Teléfono:</label>
                         <input type="password" class="form-control" id="phone_number" value="905-9683315" size="30">
                       </div>
-
+                    </form>
+                    <div>
                       <input class="btn btn-default" id="startcall-button" title="start call" type="submit" value="Call"
                         style="background-image: url(&#39;../images/icons/phone-icon.png&#39;);
                         background-position:center;" onclick="getStarted();">
-
-                    </form>
-
-                    <div>
-<!--
-                        <img src="../images/icons/phone-icon.png" title="start call" id="startcall-button" onclick="getStarted();" />
--->
-
                     </div>
-                </td><td>
-            </td></tr>
+                </td>
+              </tr>
         </tbody></table>
   </div>
 
