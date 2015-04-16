@@ -379,7 +379,19 @@
 
   <style type="text/css">
   #login-window{
-    padding: 15px;
+    padding: 20px;
+    background-image: url("images/background.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  #login-form{
+    border-collapse: separate;
+    border-spacing: 10px;
+    border-radius:6px;
+    background-color: white;
+    box-shadow: none;
+    margin-bottom: -3px;
+    margin-top: 3px;
   }
   #client-window{
     border: 2px solid #000000;
@@ -467,7 +479,7 @@
 <!-- Modified by developer -->
 
   <div id="login-window">
-      <table>
+      <table id="login-form">
           <tbody>
             <tr>
                 <td id="login-text2">
@@ -497,26 +509,22 @@
                         <input type="password" class="form-control" id="phone_number" value="905-9683315" size="30">
                       </div>
                       <div class="form-group">
-                        <label for="asunto">Asunto:</label>
-                        <div class="dropdown">
-                          <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-                            Seleccione una opción <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-                            <li role="presentation"><a role="menuitem" tabindex="-1" >Información sobre vacaciones</a></li>
-                            <li role="presentation"><a role="menuitem" tabindex="-1" >Información sobre estudio</a></li>
-                          </ul>
-                        </div>
+                        <label for="select-option">Asunto:</label>
+                        <select class="form-control" id="select-option">
+                          <option>Seleccione una opción</option>
+                          <option>Información sobre vacaciones</option>
+                          <option>Información sobre estudio</option>
+                        </select>
                       </div>
                     </form>
-                    <div>
-                      <buton class="btn btn-danger" id="startcall-button" title="start call" type="submit" value="Enviar"
-                        style="border-radius: 10px; padding:10px;" onclick="getStarted();">
-                        <span class="glyphicon glyphicon-facetime-video" style="vertical-align: middle;"></span>&nbsp;&nbsp;&nbsp;Enviar</button>
-                    </div>
                 </td>
               </tr>
         </tbody></table>
+        <div style="text-align:center; margin-top:30px;">
+          <buton class="btn btn-danger" id="startcall-button" title="start call" type="submit" value="Enviar"
+            style="border-radius: 10px; padding:10px;" onclick="getStarted();">
+            <span class="glyphicon glyphicon-facetime-video" style="vertical-align: middle;"></span>&nbsp;&nbsp;&nbsp;Enviar</button>
+        </div>
   </div>
 
 <!-- End of modified by developer -->
@@ -578,9 +586,9 @@
       <label onclick="doEndSession()" style="margin-left:15px;margin-right:15px">End Session
       </label>
     </span> -->
-    <div>
+    <div style="text-align:center;">
       <buton class="btn btn-danger" id="button-end-session" title="end call" type="submit" value="Colgar"
-        style="border-radius: 10px; padding:10px;" onclick="doEndSession();">
+        style="border-radius: 10px; padding:10px; margin-top:30px;" onclick="doEndSession();">
         <i class="glyphicon glyphicon-earphone" style="vertical-align: middle;"></i>&nbsp;&nbsp;&nbsp;Colgar</button>
     </div>
 
