@@ -108,6 +108,9 @@
         // hide the login section
         $("#login-window").hide();
 
+        //hide welcome message (modified by developer)
+        $("#login-text2").hide();
+
         // display the client section
         $('#client').show();
 
@@ -319,6 +322,8 @@
         $('#icons-video-chat').hide();
 
         $('#login-window').show();
+        //Show welcome text again (modified by developer)
+        $("#login-text2").show();
         $("#button-end-session").hide();
 
         $('#enable-video-button').hide();
@@ -379,14 +384,15 @@
 
   <style type="text/css">
   #login-window{
-    padding: 20px;
+    padding: 50px;
+    padding-top: 100px;
     background-image: url("images/background.jpg");
     background-repeat: no-repeat;
     background-size: cover;
   }
   #login-form{
     border-collapse: separate;
-    border-spacing: 50px;
+    border-spacing: 20px;
     border-radius:6px;
     background-color: white;
     box-shadow: none;
@@ -425,6 +431,20 @@
     width: 90%;
     height: 90%;
   }
+  #header{
+    background-image: url("images/banner.jpg");
+    height: 60px;
+  }
+  #logo-allus{
+    width: 40%;
+    height: 60px;
+    padding: 10px;
+    background-color: white;
+  }
+  #login-text2{
+    padding:10px;
+    font-weight: bold;
+  }
   </style>
 
 
@@ -439,11 +459,14 @@
 
 <!-- begin container -->
 <div id="container" class="clear-block"> <!-- 2 -->
-
   <!-- begin header -->
+  
    <div id="header"><!-- 3 -->
-
-
+     <img src="images/logo_allus.jpg"id="logo-allus">
+   </div>
+   <div id="login-text2">
+     Ingresa tus datos para ser atendido por uno de nuestros asesores especializados
+   </div>
 
     <!--TODO add setting method-->
     <!--
@@ -473,7 +496,6 @@
     </tbody>
     </table>
     -->
-  </div>
   <!-- end header -->
 
 <!-- Modified by developer -->
@@ -481,13 +503,13 @@
   <div id="login-window">
       <table id="login-form">
           <tbody>
-            <tr>
+            <!-- <tr>
                 <td id="login-text2">
                   <h5 class="form-signin-heading">
                     Ingresa tus datos para ser atendido por uno de nuestros asesores especializados
                   </h5>
                 </td>
-            </tr>
+            </tr> -->
             <tr>
                 <td id="login-text3">
 
